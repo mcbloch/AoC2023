@@ -3,16 +3,17 @@ module main
 import os
 import time
 
-fn part01(lines []string) !u64 {
-	mut sum := u64(0)
+fn part01(lines []string) !int {
+	mut sum := 0
+	mut nums := []int{}
 	for line in lines {
-		mut nums := []u64{}
-		for c in line.split('') {
-			if num := c.parse_uint(10, 64) {
-				nums << num
+		for c in line {
+			if c.is_digit() {
+				nums << int(c.ascii_str().int())
 			}
 		}
-		calibration_value := (nums[0] * 10) + nums#[-1..][0]
+		calibration_value := (nums.first() * 10) + nums.last()
+		nums.clear()
 		sum += calibration_value
 	}
 	return sum
@@ -20,40 +21,53 @@ fn part01(lines []string) !u64 {
 
 fn part02(lines []string) !int {
 	mut sum := 0
-	string_numbers := {
-		'one':   1
-		'two':   2
-		'three': 3
-		'four':  4
-		'five':  5
-		'six':   6
-		'seven': 7
-		'eight': 8
-		'nine':  9
-	}
+
+	string_numbers := [
+		'one',
+		'o1e',
+		'two',
+		't2o',
+		'three',
+		't3e',
+		'four',
+		'f4r',
+		'five',
+		'f5e',
+		'six',
+		's6x',
+		'seven',
+		's7n',
+		'eight',
+		'e8t',
+		'nine',
+		'n9e',
+	]
+	mut nums := []int{}
 	for line in lines {
-		mut nums := []int{}
-		for i in 0 .. line.len {
-			if num := line.substr(i, i + 1).parse_uint(10, 64) {
-				nums << int(num)
-			} else {
-				for key, value in string_numbers {
-					if line.substr(i, line.len).starts_with(key) {
-						nums << value
-					}
-				}
+		eddited_line := line.replace_each(string_numbers).replace_each(string_numbers)
+		for c in eddited_line {
+			if c.is_digit() {
+				nums << int(c.ascii_str().int())
 			}
 		}
-
-		calibration_value := (nums[0] * 10) + nums#[-1..][0]
+		calibration_value := (nums.first() * 10) + nums.last()
+		nums.clear()
 		sum += calibration_value
 	}
 	return sum
 }
 
 fn main() {
-	inputfile := os.args[1]
+	inputfile := if os.args.len < 2 {
+		'input/01.txt'
+	} else {
+		os.args[1]
+	}
+	println('Reading input: ${inputfile}')
+
+	swfile := time.new_stopwatch()
 	lines := os.read_lines(inputfile)!
+	println('fileread took: ${swfile.elapsed().microseconds()}us')
 
 	if os.args.len >= 3 {
 		part := os.args[2]
@@ -67,10 +81,10 @@ fn main() {
 	} else {
 		sw := time.new_stopwatch()
 		println(part01(lines)!)
-		println('Part 01 took: ${sw.elapsed().milliseconds()}ms')
+		println('Part 01 took: ${sw.elapsed().microseconds()}us')
 
 		sw2 := time.new_stopwatch()
 		println(part02(lines)!)
-		println('Part 02 took: ${sw2.elapsed().milliseconds()}ms')
+		println('Part 02 took: ${sw2.elapsed().microseconds()}us')
 	}
 }
