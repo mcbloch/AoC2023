@@ -55,11 +55,22 @@ fn main() {
 	inputfile := os.args[1]
 	lines := os.read_lines(inputfile)!
 
-	sw := time.new_stopwatch()
-	println(part01(lines)!)
-	println('Part 01 took: ${sw.elapsed().milliseconds()}ms')
+	if os.args.len >= 3 {
+		part := os.args[2]
+		if part == '1' {
+			print(part01(lines)!)
+		} else if part == '2' {
+			print(part02(lines)!)
+		} else {
+			println('Unknown part specified')
+		}
+	} else {
+		sw := time.new_stopwatch()
+		println(part01(lines)!)
+		println('Part 01 took: ${sw.elapsed().milliseconds()}ms')
 
-	sw2 := time.new_stopwatch()
-	println(part02(lines)!)
-	println('Part 02 took: ${sw2.elapsed().milliseconds()}ms')
+		sw2 := time.new_stopwatch()
+		println(part02(lines)!)
+		println('Part 02 took: ${sw2.elapsed().milliseconds()}ms')
+	}
 }

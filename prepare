@@ -12,4 +12,8 @@ if ! test -f "$file"; then
     exit 0
 fi
 
-v -cc clang -skip-unused -prod -d no_segfault_handler -showcc -cflags "-march=native -ffast-math" "$file"
+if test -f "day$1"; then
+    echo 'Already compiled'
+else
+    v -cc clang -skip-unused -prod -d no_segfault_handler -showcc -cflags "-march=native -ffast-math" "$file"
+fi
