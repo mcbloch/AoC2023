@@ -52,7 +52,7 @@ fn part02(lines []string) !int {
 }
 
 fn main() {
-	lines := os.read_lines('input/input_1.txt')!
+	lines := os.read_lines('input/01.txt')!
 
 	sw := time.new_stopwatch()
 	println(part01(lines)!)

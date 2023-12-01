@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if ! command -v "v"; then
+    echo "v is not installed. Please install with your package manager or from source: https://vlang.io/"
+    exit 0
+fi
+
+file="day$1.v"
+
+if ! test -f "$file"; then
+    echo "Day $1 is not implemented yet. Soon..."
+    exit 0
+fi
+
+v -cc clang -skip-unused -prod -d no_segfault_handler -showcc -cflags "-march=native -ffast-math" "$file"

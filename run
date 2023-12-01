@@ -1,0 +1,7 @@
+#!/bin/sh
+
+day=$1
+part=$2
+file=$3
+
+eval "./day$day"
