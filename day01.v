@@ -20,8 +20,6 @@ fn part01(lines []string) !int {
 }
 
 fn part02(lines []string) !int {
-	mut sum := 0
-
 	string_numbers := [
 		'one',
 		'o1e',
@@ -42,17 +40,23 @@ fn part02(lines []string) !int {
 		'nine',
 		'n9e',
 	]
-	mut nums := []int{}
+
+	mut sum := 0
 	for line in lines {
 		eddited_line := line.replace_each(string_numbers).replace_each(string_numbers)
-		for c in eddited_line {
-			if c.is_digit() {
-				nums << int(c.ascii_str().int())
+		for i in 0 .. eddited_line.len {
+			if eddited_line[i].is_digit() {
+				sum += (eddited_line[i] - u8(`0`)) * 10
+				break
 			}
 		}
-		calibration_value := (nums.first() * 10) + nums.last()
-		nums.clear()
-		sum += calibration_value
+
+		for i := eddited_line.len - 1; i >= 0; i -= 1 {
+			if eddited_line[i].is_digit() {
+				sum += (eddited_line[i] - u8(`0`))
+				break
+			}
+		}
 	}
 	return sum
 }
@@ -65,9 +69,9 @@ fn main() {
 	}
 	println('Reading input: ${inputfile}')
 
-	swfile := time.new_stopwatch()
+	// swfile := time.new_stopwatch()
 	lines := os.read_lines(inputfile)!
-	println('fileread took: ${swfile.elapsed().microseconds()}us')
+	// println('fileread took: ${swfile.elapsed().microseconds()}us')
 
 	if os.args.len >= 3 {
 		part := os.args[2]

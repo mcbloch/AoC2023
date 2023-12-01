@@ -4,7 +4,7 @@ day="$(printf '%02d' ${1##0})"
 part=$2
 inputfile="$PWD/input/${day}.txt"
 
-# hyperfine "v run day01.v $inputfile $part"
+# hyperfine "v run day$day.v $inputfile $part"
 
 ./prepare "$day" "$part"
 hyperfine -n "$dir" "./run '$day' '$part' '$inputfile'"
