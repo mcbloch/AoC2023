@@ -6,6 +6,7 @@ import arrays
 import math
 
 fn part01(lines []string) !int {
+	// mean: 320
 	bag_contents := {
 		'red':   12
 		'green': 13
@@ -14,22 +15,19 @@ fn part01(lines []string) !int {
 	mut sum := 0
 	for line in lines {
 		mut valid_line := true
-		mut prefix_suffix := line.split(': ')
-		id := prefix_suffix[0].split(' ')[1]
-		games := prefix_suffix[1].split('; ')
-		for game in games {
-			colors := game.split(', ')
-			for color_str in colors {
-				color_pair := color_str.split(' ')
-				amount := color_pair[0]
-				color := color_pair[1]
+		mut prefix_suffix := line.split(':')
+		for color_str in prefix_suffix[1].split_any(';,') {
+			color_pair := color_str.trim_space().split(' ')
+			amount := color_pair[0]
+			color := color_pair[1]
 
-				if amount.int() > bag_contents[color] {
-					valid_line = false
-				}
+			if amount.int() > bag_contents[color] {
+				valid_line = false
+				break
 			}
 		}
 		if valid_line {
+			id := prefix_suffix[0].split(' ')[1]
 			sum += id.int()
 		}
 	}
