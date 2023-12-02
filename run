@@ -4,4 +4,4 @@ day=$1
 part=$2
 file=$3
 
-eval "./day$day" $file
+eval "./day$day/day$day" $file

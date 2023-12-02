@@ -5,7 +5,7 @@ if ! command -v "v"; then
     exit 0
 fi
 
-file="day$1.v"
+file="day$1/day$1.v"
 
 if ! test -f "$file"; then
     echo "Day $1 is not implemented yet. Soon..."

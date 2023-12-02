@@ -4,4 +4,4 @@ day=$1
 part=$2
 file=$3
 
-rm "./day$day"
+rm "./day$day/day$day"
