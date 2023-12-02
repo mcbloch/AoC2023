@@ -2,7 +2,6 @@ module main
 
 import os
 import time
-import arrays
 import math
 
 fn part01(lines []string) !int {
@@ -37,23 +36,16 @@ fn part01(lines []string) !int {
 fn part02(lines []string) !int {
 	mut sum := 0
 	for line in lines {
-		mut minimal_bag_contents := {
+		mut minimal_bag := {
 			'red':   0
 			'green': 0
 			'blue':  0
 		}
-		for draw in line.split(': ')[1].split('; ') {
-			for color_str in draw.split(', ') {
-				color_pair := color_str.split(' ')
-				amount := color_pair[0].int()
-				color := color_pair[1]
-				minimal_bag_contents[color] = math.max(minimal_bag_contents[color], amount)
-			}
+		for color_str in line.split(':')[1].split_any(';,') {
+			color_pair := color_str.trim_space().split(' ')
+			minimal_bag[color_pair[1]] = math.max(minimal_bag[color_pair[1]], color_pair[0].int())
 		}
-		power := arrays.reduce(minimal_bag_contents.values(), fn (t1 int, t2 int) int {
-			return t1 * t2
-		})!
-		sum += power
+		sum += minimal_bag['red'] * minimal_bag['blue'] * minimal_bag['green']
 	}
 	return sum
 }
