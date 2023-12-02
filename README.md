@@ -2,11 +2,16 @@
 
 > https://adventofcode.com/2023
 
+## running
+
+```sh
+make run
+```
+
 ## tests
 
 ```sh
-v -stats test day01
-...
+make test
 ```
 
 ## profiling
