@@ -17,17 +17,14 @@ fn part01(lines []string) !int {
 		mut prefix_suffix := line.split(':')
 		for color_str in prefix_suffix[1].split_any(';,') {
 			color_pair := color_str.trim_space().split(' ')
-			amount := color_pair[0]
-			color := color_pair[1]
 
-			if amount.int() > bag_contents[color] {
+			if color_pair[0].int() > bag_contents[color_pair[1]] {
 				valid_line = false
 				break
 			}
 		}
 		if valid_line {
-			id := prefix_suffix[0].split(' ')[1]
-			sum += id.int()
+			sum += prefix_suffix[0].split(' ')[1].int()
 		}
 	}
 	return sum
