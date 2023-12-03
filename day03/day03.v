@@ -46,11 +46,6 @@ fn part01(lines []string) !int {
 	return sum
 }
 
-struct Position {
-	x int
-	y int
-}
-
 fn part02(lines []string) !int {
 	mut sum := 0
 	directions := [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1],
@@ -90,9 +85,6 @@ fn part02(lines []string) !int {
 						gears[gear_location] = []
 					}
 					gears[gear_location] << slice
-					// println('${slice} is valid')
-				} else {
-					// println('${slice} is not valid')
 				}
 				indices.clear()
 			}
