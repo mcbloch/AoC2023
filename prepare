@@ -2,14 +2,14 @@
 
 if ! command -v "v"; then
     echo "v is not installed. Please install with your package manager or from source: https://vlang.io/"
-    exit 0
+    exit 1
 fi
 
 file="day$1/day$1.v"
 
 if ! test -f "$file"; then
     echo "Day $1 is not implemented yet. Soon..."
-    exit 0
+    exit 1
 fi
 
 if test -f "day$1"; then
