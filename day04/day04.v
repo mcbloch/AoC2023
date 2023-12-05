@@ -2,7 +2,6 @@ module main
 
 import os
 import time
-import datatypes
 import arrays
 
 fn convert_numbers(s string) []int {
@@ -17,21 +16,13 @@ fn part01(lines []string) !int {
 	mut sum := 0
 	for line in lines {
 		temp := line.split_any(':|')
-		str_wini := temp[1]
-		str_mine := temp[2]
 
-		winning := convert_numbers(str_wini)
-		mine := convert_numbers(str_mine)
-
-		mut mine_set := datatypes.Set[int]{}
-		mine_set.add_all(mine)
+		winning := convert_numbers(temp[1])
+		mine := convert_numbers(temp[2])
 
 		mut card_value := 0
-		// for num in mine_set {
-		for mine_set.size() > 0 {
-			num := mine_set.pop()!
+		for num in mine {
 			if winning.contains(num) {
-				// print(' win ')
 				if card_value == 0 {
 					card_value = 1
 				} else {
@@ -39,7 +30,6 @@ fn part01(lines []string) !int {
 				}
 			}
 		}
-		// println('${winning} - ${mine} - ${card_value}')
 		sum += card_value
 	}
 	return sum
@@ -49,29 +39,19 @@ fn part02(lines []string) !int {
 	mut card_count := []int{len: lines.len, init: 1}
 	for line_i, line in lines {
 		temp := line.split_any(':|')
-		str_wini := temp[1]
-		str_mine := temp[2]
 
-		winning := convert_numbers(str_wini)
-		mine := convert_numbers(str_mine)
-
-		mut mine_set := datatypes.Set[int]{}
-		mine_set.add_all(mine)
+		winning := convert_numbers(temp[1])
+		mine := convert_numbers(temp[2])
 
 		mut match_count := 0
-		// for num in mine_set {
-		for mine_set.size() > 0 {
-			num := mine_set.pop()!
+		for num in mine {
 			if winning.contains(num) {
-				// print(' win ')
 				match_count += 1
 			}
 		}
 		for i in 1 .. match_count + 1 {
 			card_count[line_i + i] += card_count[line_i]
 		}
-		// println(card_count)
-		// println('${winning} - ${mine} - ${card_value}')
 	}
 	return arrays.sum(card_count)
 }
