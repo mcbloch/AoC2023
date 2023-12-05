@@ -1,6 +1,6 @@
 .PHONY: run run_fast run_faster test fmt
 
-NUMBERS = 1 2 3 4 5 6
+NUMBERS = 1 2 3 4 5
 
 run:
 	$(foreach var,$(NUMBERS),v run day0$(var)/day0$(var).v;)
