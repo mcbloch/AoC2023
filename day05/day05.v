@@ -3,15 +3,36 @@ module main
 import os
 import time
 import math
-// import datatypes
-// import arrays
+import arrays
 
-fn parse_io(lines []string) ([]i64, map[string]string, map[string][][]i64) {
+struct Range {
+	start i64
+	len   i64
+}
+
+pub fn (c Range) str() string {
+	return 'Range{${c.start}, ${c.len}}'
+}
+
+pub fn (r Range) end() i64 {
+	return r.start + r.len
+}
+
+struct Mapping {
+	src i64
+	dst i64
+	len i64
+}
+
+type MappingMeta = map[string]string
+type MappingData = map[string][]Mapping
+
+fn parse_io(lines []string) ([]i64, MappingMeta, MappingData) {
 	seeds := lines[0].split(': ')[1].split(' ').map(fn (s string) i64 {
 		return s.i64()
 	})
 	mut mapping_meta := map[string]string{}
-	mut mapping_data := map[string][][]i64{}
+	mut mapping_data := map[string][]Mapping{}
 
 	mut i := 2
 	for i < lines.len {
@@ -19,15 +40,17 @@ fn parse_io(lines []string) ([]i64, map[string]string, map[string][][]i64) {
 		src := temp[0]
 		dest := temp[2]
 
-		// println('${src} -> ${dest}')
 		mapping_meta[src] = dest
 		mapping_data[src] = []
 
 		i += 1
 		for {
-			mapping_data[src] << lines[i].split(' ').map(fn (s string) i64 {
-				return s.i64()
-			})
+			nums := lines[i].split(' ').map(it.i64())
+			mapping_data[src] << Mapping{
+				src: nums[1]
+				dst: nums[0]
+				len: nums[2]
+			}
 
 			i += 1
 			if i >= lines.len || lines[i] == '' {
@@ -36,8 +59,6 @@ fn parse_io(lines []string) ([]i64, map[string]string, map[string][][]i64) {
 			}
 		}
 	}
-	// println(mapping_meta)
-	// println(mapping_data)
 
 	return seeds, mapping_meta, mapping_data
 }
@@ -51,18 +72,12 @@ fn part01(lines []string) !i64 {
 		mut current_id := seed
 
 		for (current_name in mapping_meta) {
-			// println('${current_name} ${current_id}')
-
 			mut mapping_found := false
 			for range in mapping_data[current_name] {
-				dest_range_start := range[0]
-				src_range_start := range[1]
-				range_length := range[2]
-
-				if current_id >= src_range_start && current_id <= src_range_start + range_length {
+				if current_id >= range.src && current_id <= range.src + range.len {
 					mapping_found = true
 					current_name = mapping_meta[current_name]
-					current_id = dest_range_start + (current_id - src_range_start)
+					current_id = range.dst + (current_id - range.src)
 					break
 				}
 			}
@@ -79,67 +94,40 @@ fn part01(lines []string) !i64 {
 	return min_location
 }
 
-struct Range {
-	start i64
-	len   i64
-}
-
-pub fn (c Range) str() string {
-	return 'Range{${c.start}, ${c.len}}'
-}
-
-struct Mapping {
-	src   i64
-	dst   i64
-	range i64
-}
-
-fn find_destination_mappings(name string, source Range, mapping_meta map[string]string, mapping_data map[string][][]i64) []Range {
+fn find_destination_mappings(name string, source Range, mapping_meta MappingMeta, mapping_data MappingData) []Range {
 	mut destination_mappings := []Range{}
 
 	mut offset := i64(0)
 	for offset < source.len {
-		// println('    ${source.start}, ${source.len}, ${offset}')
-		// println('    search from ${source.start + offset} with len ${source.len - offset} until ${
-		// source.start + source.len}')
+		current_start := source.start + offset
 		mut entry_found := false
 		for entry in mapping_data[name] {
-			// println('    entry: ${entry}')
-			src_range_start := entry[1]
-			range_length := entry[2]
-			distance := source.start + offset - src_range_start
-			if (source.start + offset >= src_range_start)
-				&& (source.start + offset < src_range_start + range_length) {
+			distance := current_start - entry.src
+			if (current_start >= entry.src) && (current_start < entry.src + entry.len) {
 				destination_mappings << Range{
-					start: entry[0] + ((source.start + offset) - src_range_start)
-					len: math.min(source.len - offset, entry[2] - distance)
+					start: entry.dst + (current_start - entry.src)
+					len: math.min(source.len - offset, entry.len - distance)
 				}
 				entry_found = true
-				// println('      matching entry')
 				break
 			}
 		}
 		if !entry_found {
-			// Find the first next value
-			mut next_value := i64(-1)
-			for entry in mapping_data[name] {
-				if (entry[1] > source.start + offset) && (next_value == -1 || entry[1] < next_value) {
-					next_value = entry[1]
-				}
+			next_value := arrays.min(mapping_data[name].map(it.src).filter(it > current_start)) or {
+				-1
 			}
+
 			next_len := if next_value == -1 {
 				source.len - offset
 			} else {
-				math.min(source.len - offset, next_value - (source.start + offset))
+				math.min(source.len - offset, next_value - current_start)
 			}
 
 			destination_mappings << Range{
-				start: source.start + offset
+				start: current_start
 				len: next_len
 			}
 		}
-		// println('    ${source.start + offset} -> ${destination_mappings.last().start}. for a range of ${destination_mappings.last().len} (rest: ${source.len - offset - destination_mappings.last().len})')
-		// println('increase with ${destination_mappings.last().len}')
 		offset += destination_mappings.last().len
 	}
 	return destination_mappings
@@ -156,39 +144,19 @@ fn part02(lines []string) !i64 {
 			len: seeds[i + 1]
 		}
 	}
-	// println(input_ranges)
 
 	mut current_name := 'seed'
 	for (current_name in mapping_meta) {
-		// println('============')
-		// println('type: ${current_name}')
-		// println('with ranges: ${input_ranges}')
-		for (input_ranges.len > 0) {
-			input_range := input_ranges.pop()
-
-			// println('  take range ${input_range}')
-			dest_ranges := find_destination_mappings(current_name, input_range, mapping_meta,
-				mapping_data)
-			// println('    found destinations ${dest_ranges}')
-
-			for dst_range in dest_ranges {
-				next_input_ranges << dst_range
-			}
+		for input_range in input_ranges {
+			next_input_ranges << find_destination_mappings(current_name, input_range,
+				mapping_meta, mapping_data)
 		}
-		// next_input_ranges = arrays.distinct(next_input_ranges)
 		input_ranges = next_input_ranges.clone()
 		next_input_ranges.clear()
 		current_name = mapping_meta[current_name]
 	}
 
-	mut min_location := i64(-1)
-	for range in input_ranges {
-		if min_location == -1 || range.start < min_location {
-			min_location = range.start
-		}
-	}
-
-	return min_location
+	return arrays.min(input_ranges.map(it.start))
 }
 
 fn main() {
