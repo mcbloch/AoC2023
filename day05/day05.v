@@ -23,22 +23,19 @@ struct Mapping {
 	dst i64
 	len i64
 }
+pub fn (m Mapping) str() string {
+	return 'Mapping{src:${m.src}, dst:${m.dst}, len:${m.len}}'
+}
 
 pub fn (m Mapping) src_end() i64 {
 	return m.src + m.len
-}
-
-pub fn (m Mapping) dst_end() i64 {
-	return m.dst + m.len
 }
 
 type MappingMeta = map[string]string
 type MappingData = map[string][]Mapping
 
 fn parse_io(lines []string) ([]i64, MappingMeta, MappingData) {
-	seeds := lines[0].split(': ')[1].split(' ').map(fn (s string) i64 {
-		return s.i64()
-	})
+	seeds := lines[0].split(': ')[1].split(' ').map(it.i64())
 	mut mapping_meta := map[string]string{}
 	mut mapping_data := map[string][]Mapping{}
 
@@ -50,9 +47,9 @@ fn parse_io(lines []string) ([]i64, MappingMeta, MappingData) {
 
 		mapping_meta[src] = dest
 		mapping_data[src] = []
-
 		i += 1
-		for {
+
+		for (lines[i] != '') {
 			nums := lines[i].split(' ').map(it.i64())
 			mapping_data[src] << Mapping{
 				src: nums[1]
@@ -61,13 +58,14 @@ fn parse_io(lines []string) ([]i64, MappingMeta, MappingData) {
 			}
 
 			i += 1
-			if i >= lines.len || lines[i] == '' {
-				i += 1
+			if i >= lines.len {
 				break
 			}
 		}
-	}
 
+		// mapping_data[src].sort(a.src < b.src)
+		i += 1
+	}
 	return seeds, mapping_meta, mapping_data
 }
 
@@ -97,14 +95,13 @@ fn part01(lines []string) !i64 {
 	return min_location
 }
 
-fn find_destination_mappings(name string, source Range, mapping_meta MappingMeta, mapping_data MappingData) []Range {
+fn find_destination_mappings(source Range, map_entries []Mapping) []Range {
 	mut destination_mappings := []Range{}
-
 	mut offset := i64(0)
 	for offset < source.len {
 		current_start := source.start + offset
 		mut entry_found := false
-		for entry in mapping_data[name] {
+		for entry in map_entries {
 			distance := current_start - entry.src
 			if (current_start >= entry.src) && (current_start < entry.src_end()) {
 				destination_mappings << Range{
@@ -116,7 +113,7 @@ fn find_destination_mappings(name string, source Range, mapping_meta MappingMeta
 			}
 		}
 		if !entry_found {
-			next_value := arrays.min(mapping_data[name].map(it.src).filter(it > current_start)) or {
+			next_value := arrays.min(map_entries.map(it.src).filter(it > current_start)) or {
 				source.end()
 			}
 
@@ -145,8 +142,7 @@ fn part02(lines []string) !i64 {
 	mut current_name := 'seed'
 	for (current_name in mapping_meta) {
 		for input_range in input_ranges {
-			next_input_ranges << find_destination_mappings(current_name, input_range,
-				mapping_meta, mapping_data)
+			next_input_ranges << find_destination_mappings(input_range, mapping_data[current_name])
 		}
 		input_ranges = next_input_ranges.clone()
 		next_input_ranges.clear()
