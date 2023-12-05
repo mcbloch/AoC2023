@@ -24,6 +24,14 @@ struct Mapping {
 	len i64
 }
 
+pub fn (m Mapping) src_end() i64 {
+	return m.src + m.len
+}
+
+pub fn (m Mapping) dst_end() i64 {
+	return m.dst + m.len
+}
+
 type MappingMeta = map[string]string
 type MappingData = map[string][]Mapping
 
@@ -72,18 +80,13 @@ fn part01(lines []string) !i64 {
 		mut current_id := seed
 
 		for (current_name in mapping_meta) {
-			mut mapping_found := false
 			for range in mapping_data[current_name] {
-				if current_id >= range.src && current_id <= range.src + range.len {
-					mapping_found = true
-					current_name = mapping_meta[current_name]
+				if current_id >= range.src && current_id < range.src_end() {
 					current_id = range.dst + (current_id - range.src)
 					break
 				}
 			}
-			if !mapping_found {
-				current_name = mapping_meta[current_name]
-			}
+			current_name = mapping_meta[current_name]
 		}
 
 		if min_location == -1 || current_id < min_location {
@@ -103,9 +106,9 @@ fn find_destination_mappings(name string, source Range, mapping_meta MappingMeta
 		mut entry_found := false
 		for entry in mapping_data[name] {
 			distance := current_start - entry.src
-			if (current_start >= entry.src) && (current_start < entry.src + entry.len) {
+			if (current_start >= entry.src) && (current_start < entry.src_end()) {
 				destination_mappings << Range{
-					start: entry.dst + (current_start - entry.src)
+					start: entry.dst + distance
 					len: math.min(source.len - offset, entry.len - distance)
 				}
 				entry_found = true
@@ -114,18 +117,12 @@ fn find_destination_mappings(name string, source Range, mapping_meta MappingMeta
 		}
 		if !entry_found {
 			next_value := arrays.min(mapping_data[name].map(it.src).filter(it > current_start)) or {
-				-1
-			}
-
-			next_len := if next_value == -1 {
-				source.len - offset
-			} else {
-				math.min(source.len - offset, next_value - current_start)
+				source.end()
 			}
 
 			destination_mappings << Range{
 				start: current_start
-				len: next_len
+				len: next_value - current_start
 			}
 		}
 		offset += destination_mappings.last().len
