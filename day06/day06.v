@@ -18,16 +18,12 @@ fn part01(lines []string) !int {
 	times := lines[0].split(':')[1].split(' ').filter(it.len > 0).map(it.int())
 	dists := lines[1].split(':')[1].split(' ').filter(it.len > 0).map(it.int())
 
-	mut can_win_counts := []int{}
+	mut score := 1
 	for gr in arrays.group[int](times, dists) {
-		time := gr[0]
-		dist := gr[1]
-		can_win_counts << range(0, time).map((time - it) * it).filter(it > dist).len
+		score *= range(0, gr[0]).map((gr[0] - it) * it).filter(it > gr[1]).len
 	}
 
-	return arrays.reduce(can_win_counts, fn (a int, b int) int {
-		return a * b
-	})
+	return score
 }
 
 fn bin_search(time i64, dist i64, find_lower bool) i64 {
@@ -44,19 +40,9 @@ fn bin_search(time i64, dist i64, find_lower bool) i64 {
 			}
 			break
 		}
-		match find_lower {
-			true {
-				match win {
-					true { to = hold_time }
-					false { from = hold_time }
-				}
-			}
-			false {
-				match win {
-					true { from = hold_time }
-					false { to = hold_time }
-				}
-			}
+		match win != find_lower {
+			true { from = hold_time }
+			false { to = hold_time }
 		}
 	}
 	return found_value
@@ -67,10 +53,7 @@ fn part02(lines []string) !i64 {
 	dist := lines[1].split(':')[1].split(' ').filter(it.len > 0).join('').i64()
 
 	// we want to search for the first and last winning hold value. We do this with a binary search
-	first_winning := bin_search(time, dist, true)
-	last_winning := bin_search(time, dist, false)
-
-	return last_winning - first_winning + 1
+	return bin_search(time, dist, false) - bin_search(time, dist, true) + 1
 }
 
 fn main() {
