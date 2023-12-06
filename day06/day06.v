@@ -2,37 +2,28 @@ module main
 
 import os
 import time
-import math
+// import math
 import arrays
 
+fn range(from int, to int) []int {
+	mut l := []int{len: (to - from) + 1}
+	for i in from .. to {
+		l[i] = i
+	}
+	return l
+	// return []int{len: (to - from) + 1, init: index + from}
+}
+
 fn part01(lines []string) !int {
-	time := lines[0].split(':')[1].split(' ').filter(it.len > 0).map(it.int())
-	dist := lines[1].split(':')[1].split(' ').filter(it.len > 0).map(it.int())
-	// println(time)
-	// println(dist)
+	times := lines[0].split(':')[1].split(' ').filter(it.len > 0).map(it.int())
+	dists := lines[1].split(':')[1].split(' ').filter(it.len > 0).map(it.int())
 
 	mut can_win_counts := []int{}
-	for race_i in 0 .. time.len {
-		mut can_win_count := 0
-		// println('Race: time=${time[race_i]}, dist=${dist[race_i]}')
-		for hold_time in 0 .. time[race_i] {
-			speed := hold_time
-			mut curr_time := hold_time
-			// println('  hold=${hold_time}')
-			mut travelled := 0
-			for (curr_time < time[race_i]) {
-				//  println('    time=${curr_time}, speed=${speed}, dist=${travelled}')
-				travelled += speed
-				curr_time += 1
-			}
-			if travelled > dist[race_i] {
-				// println('  Win')
-				can_win_count += 1
-			}
-		}
-		can_win_counts << can_win_count
+	for gr in arrays.group[int](times, dists) {
+		time := gr[0]
+		dist := gr[1]
+		can_win_counts << range(0, time).map((time - it) * it).filter(it > dist).len
 	}
-	// println(can_win_counts)
 
 	return arrays.reduce(can_win_counts, fn (a int, b int) int {
 		return a * b
