@@ -39,73 +39,46 @@ fn part01(lines []string) !int {
 	})
 }
 
-fn simulate(hold_time i64, race_time i64, race_dist i64) bool {
-	speed := hold_time
-	mut curr_time := hold_time
-	// println('  hold=${hold_time}')
-	mut travelled := i64(0)
-	for (curr_time < race_time) {
-		//  println('    time=${curr_time}, speed=${speed}, dist=${travelled}')
-		travelled += speed
-		curr_time += 1
+fn bin_search(time i64, dist i64, find_lower bool) i64 {
+	mut from := i64(0)
+	mut to := time
+	mut found_value := i64(0)
+	for {
+		hold_time := i64((to + from) / 2)
+		win := (time - hold_time) * hold_time > dist
+		if from == hold_time || to == hold_time {
+			found_value = match win {
+				true { from }
+				false { to }
+			}
+			break
+		}
+		match find_lower {
+			true {
+				match win {
+					true { to = hold_time }
+					false { from = hold_time }
+				}
+			}
+			false {
+				match win {
+					true { from = hold_time }
+					false { to = hold_time }
+				}
+			}
+		}
 	}
-	return travelled > race_dist
+	return found_value
 }
 
 fn part02(lines []string) !i64 {
-	println('')
 	time := lines[0].split(':')[1].split(' ').filter(it.len > 0).join('').i64()
 	dist := lines[1].split(':')[1].split(' ').filter(it.len > 0).join('').i64()
-	println('time=${time}, dist=${dist}')
+
 	// we want to search for the first and last winning hold value. We do this with a binary search
+	first_winning := bin_search(time, dist, true)
+	last_winning := bin_search(time, dist, false)
 
-	// Search first winning value
-	mut from := i64(0)
-	mut to := time
-
-	mut first_winning := i64(0)
-	mut last_winning := i64(0)
-
-	// println('Race: time=${time[race_i]}, dist=${dist[race_i]}')
-	for {
-		hold_time := i64((to + from) / 2)
-		win := simulate(hold_time, time, dist)
-		if from == hold_time || to == hold_time {
-			first_winning = match win {
-				true { from }
-				false { to }
-
-			}
-			break
-		}
-		match win {
-			true { to = hold_time }
-			false { from = hold_time }
-		}
-		// println('from ${from} to ${to} (${hold_time})')
-	}
-	from = i64(0)
-	to = time
-	for {
-		hold_time := i64((to + from) / 2)
-		win := simulate(hold_time, time, dist)
-		if from == hold_time || to == hold_time {
-			last_winning = match win {
-				true { from }
-				false { to }
-
-			}
-			break
-		}
-		match win {
-			true { from = hold_time }
-			false { to = hold_time }
-		}
-		// println('from ${from} to ${to} (${hold_time})')
-	}
-
-	println('')
-	println('${first_winning} => ${last_winning}')
 	return last_winning - first_winning + 1
 }
 
