@@ -6,6 +6,7 @@ import math
 import arrays
 
 struct Range {
+mut:
 	start i64
 	len   i64
 }
@@ -23,6 +24,7 @@ struct Mapping {
 	dst i64
 	len i64
 }
+
 pub fn (m Mapping) str() string {
 	return 'Mapping{src:${m.src}, dst:${m.dst}, len:${m.len}}'
 }
@@ -63,7 +65,7 @@ fn parse_io(lines []string) ([]i64, MappingMeta, MappingData) {
 			}
 		}
 
-		// mapping_data[src].sort(a.src < b.src)
+		mapping_data[src].sort(a.src < b.src)
 		i += 1
 	}
 	return seeds, mapping_meta, mapping_data
@@ -96,35 +98,36 @@ fn part01(lines []string) !i64 {
 }
 
 fn find_destination_mappings(source Range, map_entries []Mapping) []Range {
-	mut destination_mappings := []Range{}
-	mut offset := i64(0)
-	for offset < source.len {
-		current_start := source.start + offset
-		mut entry_found := false
-		for entry in map_entries {
-			distance := current_start - entry.src
-			if (current_start >= entry.src) && (current_start < entry.src_end()) {
-				destination_mappings << Range{
-					start: entry.dst + distance
-					len: math.min(source.len - offset, entry.len - distance)
-				}
-				entry_found = true
-				break
-			}
-		}
-		if !entry_found {
-			next_value := arrays.min(map_entries.map(it.src).filter(it > current_start)) or {
-				source.end()
-			}
+	mut dest_mappings := []Range{}
 
-			destination_mappings << Range{
-				start: current_start
-				len: next_value - current_start
+	mut current_range := Range{source.start, source.len}
+	for entry_i, entry in map_entries {
+		if current_range.start < entry.src {
+			dest_mappings << Range{
+				start: current_range.start
+				len: entry.src - current_range.start
+			}
+			current_range.start = entry.src
+			current_range.len -= entry.src - current_range.start
+		}
+		if entry.src <= current_range.start && current_range.start < entry.src_end() {
+			dest_mappings << Range{
+				start: entry.dst + (current_range.start - entry.src)
+				len: math.min(entry.len - (current_range.start - entry.src), current_range.len)
+			}
+			current_range.start += dest_mappings.last().len
+			current_range.len -= dest_mappings.last().len
+		}
+		if current_range.len == 0 {
+			break
+		}
+		if entry_i >= map_entries.len - 1 {
+			dest_mappings << Range{
+				...current_range
 			}
 		}
-		offset += destination_mappings.last().len
 	}
-	return destination_mappings
+	return dest_mappings
 }
 
 fn part02(lines []string) !i64 {
