@@ -7,11 +7,11 @@ fn part01(lines []string) !int {
 	mut sum := 0
 	mut nums := []int{}
 	for line in lines {
-		for c in line {
-			if c.is_digit() {
-				nums << int(c.ascii_str().int())
-			}
-		}
+		nums << line
+			.bytes()
+			.filter(it.is_digit())
+			.map(it.ascii_str().int())
+
 		calibration_value := (nums.first() * 10) + nums.last()
 		nums.clear()
 		sum += calibration_value

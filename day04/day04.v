@@ -5,11 +5,7 @@ import time
 import arrays
 
 fn convert_numbers(s string) []int {
-	return s.trim_space().split(' ').filter(fn (s string) bool {
-		return s != ''
-	}).map(fn (s string) int {
-		return s.int()
-	})
+	return s.trim_space().split(' ').filter(it.len > 0).map(it.int())
 }
 
 fn part01(lines []string) !int {
@@ -43,12 +39,8 @@ fn part02(lines []string) !int {
 		winning := convert_numbers(temp[1])
 		mine := convert_numbers(temp[2])
 
-		mut match_count := 0
-		for num in mine {
-			if winning.contains(num) {
-				match_count += 1
-			}
-		}
+		mut match_count := mine.filter(it in winning).len
+
 		for i in 1 .. match_count + 1 {
 			card_count[line_i + i] += card_count[line_i]
 		}

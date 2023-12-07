@@ -1,17 +1,12 @@
 module main
 
 import os
-import time
+import time as tme { new_stopwatch }
 // import math
 import arrays
 
 fn range(from int, to int) []int {
-	mut l := []int{len: (to - from) + 1}
-	for i in from .. to {
-		l[i] = i
-	}
-	return l
-	// return []int{len: (to - from) + 1, init: index + from}
+	return []int{len: (to - from) + 1, init: index + from}
 }
 
 fn part01(lines []string) !int {
@@ -20,7 +15,9 @@ fn part01(lines []string) !int {
 
 	mut score := 1
 	for gr in arrays.group[int](times, dists) {
-		score *= range(0, gr[0]).map((gr[0] - it) * it).filter(it > gr[1]).len
+		score *= range(0, gr[0])
+			.map((gr[0] - it) * it)
+			.filter(it > gr[1]).len
 	}
 
 	return score
@@ -75,11 +72,11 @@ fn main() {
 			println('Unknown part specified')
 		}
 	} else {
-		sw := time.new_stopwatch()
+		sw := new_stopwatch()
 		println(part01(lines)!)
 		println('Part 01 took: ${sw.elapsed().microseconds()}us')
 
-		sw2 := time.new_stopwatch()
+		sw2 := new_stopwatch()
 		println(part02(lines)!)
 		println('Part 02 took: ${sw2.elapsed().microseconds()}us')
 	}

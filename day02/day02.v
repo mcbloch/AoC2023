@@ -13,17 +13,11 @@ fn part01(lines []string) !int {
 	}
 	mut sum := 0
 	for line in lines {
-		mut valid_line := true
 		mut prefix_suffix := line.split(':')
-		for color_str in prefix_suffix[1].split_any(';,') {
-			color_pair := color_str.trim_space().split(' ')
+		colors := prefix_suffix[1].split_any(';,')
+		invalid_line := colors.map(it.trim_space().split(' ')).any(it[0].int() > bag_contents[it[1]])
 
-			if color_pair[0].int() > bag_contents[color_pair[1]] {
-				valid_line = false
-				break
-			}
-		}
-		if valid_line {
+		if !invalid_line {
 			sum += prefix_suffix[0].split(' ')[1].int()
 		}
 	}
