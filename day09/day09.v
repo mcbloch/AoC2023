@@ -3,22 +3,21 @@ module main
 import os
 import time as tme { new_stopwatch }
 // import math
-import arrays
+import arrays { reduce, window }
 // import maps
 
 fn part01(lines []string) !i64 {
 	mut sum := 0
 	for line in lines {
-		mut differences := [][]int{}
-		differences << line.split(' ').map(it.int())
-		for (differences.last().any(it != 0)) {
-			differences << arrays.window(differences.last(), size: 2).map(it[1] - it[0])
+		mut diffs := line.split(' ').map(it.int())
+		mut last := [diffs.last()]
+		for (diffs.any(it != 0)) {
+			diffs = window(diffs, size: 2).map(it[1] - it[0])
+			last << diffs.last()
 		}
-		differences.last() << 0
-		for i := differences.len - 2; i >= 0; i -= 1 {
-			differences[i] << differences[i].last() + differences[i + 1].last()
-		}
-		sum += differences[0].last()
+		sum += reduce(last.reverse(), fn (acc int, elem int) int {
+			return elem + acc
+		})!
 	}
 
 	return sum
@@ -30,7 +29,7 @@ fn part02(lines []string) !i64 {
 		mut differences := [][]int{}
 		differences << line.split(' ').map(it.int())
 		for (differences.last().any(it != 0)) {
-			differences << arrays.window(differences.last(), size: 2).map(it[1] - it[0])
+			differences << window(differences.last(), size: 2).map(it[1] - it[0])
 		}
 		mut last_line := differences.last()
 		last_line.prepend(0)
