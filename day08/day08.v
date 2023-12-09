@@ -61,9 +61,9 @@ fn part02(lines []string) !i64 {
 			final_positions << dir
 		}
 	}
-	println(curr_positions)
-	println(final_positions)
-	println('')
+	// println(curr_positions)
+	// println(final_positions)
+	// println('')
 	for start in curr_positions {
 		mut curr_pos := start
 		dir_i = 0
@@ -89,7 +89,7 @@ fn part02(lines []string) !i64 {
 			if curr_pos[curr_pos.len - 1] == `Z` {
 				z_per_start[start] << p
 			}
-			println(z_per_start)
+			// println(z_per_start)
 		}
 	}
 
@@ -99,18 +99,17 @@ fn part02(lines []string) !i64 {
 	mut zs_idx := zs.map(0)
 	mut lowest_lcm := i64(0)
 	outer: for {
-		println(zs)
-		println(zs_idx)
+		// println(zs)
+		// println(zs_idx)
 		mut temp_i := 2
 		mut temp_lcm := math.lcm(zs[0][zs_idx[0]], zs[1][zs_idx[1]])
-		println(temp_lcm)
+		// println(temp_lcm)
 		for temp_i < zs.len {
 			temp_lcm = math.lcm(temp_lcm, zs[temp_i][zs_idx[temp_i]])
 			temp_i += 1
 		}
 		if lowest_lcm == 0 || temp_lcm < lowest_lcm {
 			lowest_lcm = temp_lcm
-			println(lowest_lcm)
 		}
 
 		for temp_j in 0 .. zs_idx.len {
@@ -124,23 +123,6 @@ fn part02(lines []string) !i64 {
 		}
 	}
 	return lowest_lcm
-	// return 0
-
-	// for (curr_positions.any(it[it.len - 1] != `Z`)) {
-	// 	dir := directions[dir_i % directions.len]
-	// 	for pos_i, pos in curr_positions {
-	// 		match dir {
-	// 			'L' { curr_positions[pos_i] = nodes[pos][0] }
-	// 			'R' { curr_positions[pos_i] = nodes[pos][1] }
-	// 			else {}
-	// 		}
-	// 	}
-	// 	// println(curr_positions)
-	// 	println(dir_i)
-	// 	dir_i += 1
-	// }
-	// println(nodes)
-	// return dir_i
 }
 
 fn main() {

@@ -9,43 +9,37 @@ import arrays
 fn part01(lines []string) !i64 {
 	mut sum := 0
 	for line in lines {
-		history := line.split(' ').map(it.int())
 		mut differences := [][]int{}
-		differences << history
-		for (differences.last().any(it != 0)){
+		differences << line.split(' ').map(it.int())
+		for (differences.last().any(it != 0)) {
 			differences << arrays.window(differences.last(), size: 2).map(it[1] - it[0])
 		}
 		differences.last() << 0
-		for i in 1..differences.len {
-			idx := differences.len-1-i
-			differences[idx] << differences[idx].last() + differences[idx+1].last()
+		for i := differences.len - 2; i >= 0; i -= 1 {
+			differences[i] << differences[i].last() + differences[i + 1].last()
 		}
 		sum += differences[0].last()
 	}
-	
-	
+
 	return sum
 }
 
 fn part02(lines []string) !i64 {
 	mut sum := 0
 	for line in lines {
-		history := line.split(' ').map(it.int())
 		mut differences := [][]int{}
-		differences << history
-		for (differences.last().any(it != 0)){
+		differences << line.split(' ').map(it.int())
+		for (differences.last().any(it != 0)) {
 			differences << arrays.window(differences.last(), size: 2).map(it[1] - it[0])
 		}
 		mut last_line := differences.last()
 		last_line.prepend(0)
-		for i in 1..differences.len {
-			idx := differences.len-1-i
-			differences[idx].prepend(differences[idx].first() - differences[idx+1].first())
+		for i := differences.len - 2; i >= 0; i -= 1 {
+			differences[i].prepend(differences[i].first() - differences[i + 1].first())
 		}
 		sum += differences[0].first()
 	}
-	
-	
+
 	return sum
 }
 
