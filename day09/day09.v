@@ -26,17 +26,15 @@ fn part01(lines []string) !i64 {
 fn part02(lines []string) !i64 {
 	mut sum := 0
 	for line in lines {
-		mut differences := [][]int{}
-		differences << line.split(' ').map(it.int())
-		for (differences.last().any(it != 0)) {
-			differences << window(differences.last(), size: 2).map(it[1] - it[0])
+		mut diffs := line.split(' ').map(it.int())
+		mut first := [diffs.first()]
+		for (diffs.any(it != 0)) {
+			diffs = window(diffs, size: 2).map(it[1] - it[0])
+			first << diffs.first()
 		}
-		mut last_line := differences.last()
-		last_line.prepend(0)
-		for i := differences.len - 2; i >= 0; i -= 1 {
-			differences[i].prepend(differences[i].first() - differences[i + 1].first())
-		}
-		sum += differences[0].first()
+		sum += reduce(first.reverse(), fn (acc int, elem int) int {
+			return elem - acc
+		})!
 	}
 
 	return sum
