@@ -5,88 +5,132 @@ import time { new_stopwatch }
 import math { floor }
 import arrays { flatten, group }
 
-fn find_initial_step(lines []string, start []int) []int {
-	mut curr := [start[0] + 1, start[1]]
-	if lines[curr[0]][curr[1]] in [`|`, `L`, `J`] {
-		return curr
+struct Coordinate {
+	y int
+	x int
+}
+
+fn (coord Coordinate) up() Coordinate {
+	return Coordinate{
+		y: coord.y - 1
+		x: coord.x
 	}
-	curr = [start[0] - 1, start[1]]
-	if lines[curr[0]][curr[1]] in [`|`, `7`, `F`] {
-		return curr
+}
+
+fn (coord Coordinate) down() Coordinate {
+	return Coordinate{
+		y: coord.y + 1
+		x: coord.x
 	}
-	curr = [start[0], start[1] + 1]
-	if lines[curr[0]][curr[1]] in [`-`, `7`, `J`] {
-		return curr
+}
+
+fn (coord Coordinate) left() Coordinate {
+	return Coordinate{
+		y: coord.y
+		x: coord.x - 1
 	}
-	curr = [start[0], start[1] - 1]
-	if lines[curr[0]][curr[1]] in [`-`, `L`, `F`] {
-		return curr
+}
+
+fn (coord Coordinate) right() Coordinate {
+	return Coordinate{
+		y: coord.y
+		x: coord.x + 1
+	}
+}
+
+fn at(s_arr []string, coord Coordinate) rune {
+	return s_arr[coord.y][coord.x]
+}
+
+fn (arr [][]string) at(coord Coordinate) string {
+	return arr[coord.y][coord.x]
+}
+
+fn (mut arr [][]string) set(coord Coordinate, value string) {
+	arr[coord.y][coord.x] = value
+}
+
+fn find_initial_step(lines []string, start Coordinate) Coordinate {
+	if at(lines, start.down()) in [`|`, `L`, `J`] {
+		return start.down()
+	}
+	if at(lines, start.up()) in [`|`, `7`, `F`] {
+		return start.up()
+	}
+	if at(lines, start.right()) in [`-`, `7`, `J`] {
+		return start.right()
+	}
+	if at(lines, start.left()) in [`-`, `L`, `F`] {
+		return start.left()
 	}
 	panic('No connecting pipes around starting point')
 }
 
-fn find_loop(lines []string) [][]int {
+fn find_loop(lines []string) []Coordinate {
 	// Find starting point -> letter S
-	mut start := [0, 0]
+	mut start := Coordinate{0, 0}
 	for row_i, row in lines {
 		for col_i, c in row {
 			if c == `S` {
-				start = [row_i, col_i]
+				start = Coordinate{row_i, col_i}
 				break
 			}
 		}
 	}
-	println('start at ${start}')
+	// println('start at ${start}')
 
 	// Find the direction we can go to from S
 	mut curr := find_initial_step(lines, start)
-	mut prev := start.clone()
-	mut pipe := [start, curr]
+	mut pipe := []Coordinate{cap: 1000}
+	pipe << [start, curr]
 
 	// Start to walk the loop
 	for {
-		c := lines[curr[0]][curr[1]]
+		prev := pipe[pipe.len - 2]
+		curr = pipe.last()
+
+		c := lines[curr.y][curr.x]
 		new := match c {
 			`|` {
-				if prev[0] < curr[0] {
-					[curr[0] + 1, curr[1]]
+				if prev.y < curr.y {
+					curr.down()
 				} else {
-					[curr[0] - 1, curr[1]]
+					curr.up()
 				}
 			}
 			`-` {
-				if prev[1] < curr[1] {
-					[curr[0], curr[1] + 1]
+				if prev.x < curr.x {
+					curr.right()
 				} else {
-					[curr[0], curr[1] - 1]
+					curr.left()
 				}
 			}
 			`L` {
-				if prev[0] < curr[0] {
-					[curr[0], curr[1] + 1]
+				if prev.y < curr.y {
+					curr.right()
 				} else {
-					[curr[0] - 1, curr[1]]
+					curr.up()
 				}
 			}
 			`J` {
-				if prev[0] < curr[0] {
-					[curr[0], curr[1] - 1]
+				if prev.y < curr.y {
+					curr.left()
 				} else {
-					[curr[0] - 1, curr[1]]
+					curr.up()
 				}
 			}
 			`7` {
-				if prev[0] > curr[0] {
-					[curr[0], curr[1] - 1]
+				if prev.y > curr.y {
+					curr.left()
 				} else {
-					[curr[0] + 1, curr[1]]
+					curr.down()
 				}
 			}
 			`F` {
-				if prev[0] > curr[0] {
-					[curr[0], curr[1] + 1]
+				if prev.y > curr.y {
+					curr.right()
 				} else {
-					[curr[0] + 1, curr[1]]
+					curr.down()
 				}
 			}
 			`.` {
@@ -99,9 +143,6 @@ fn find_loop(lines []string) [][]int {
 				panic('Unknown character in input')
 			}
 		}
-
-		prev = curr.clone()
-		curr = new.clone()
 		pipe << new
 	}
 	return pipe
@@ -111,21 +152,21 @@ fn part01(lines []string) !int {
 	pipe := find_loop(lines)
 	// println(lines.map(it.split('').join(' ')).join('\n'))
 	// println(pipe)
-	// println(pipe.map(lines[it[0]][it[1]].ascii_str()))
+	// println(pipe.map(lines[it.y][it.x].ascii_str()))
 	return int(floor(pipe.len / 2))
 }
 
 fn part02(lines []string) !int {
 	// Padd everything with spacing, allowing flow of open space, but not counting as ground.
-	println(lines.join('\n'))
 	mut grid := lines.map(it.split(''))
 
 	// Find loop and make everything else ground
 	pipe := find_loop(lines)
 	for ri, r in grid {
-		for ci, c in r {
-			if ! ([ri, ci] in pipe) {
-				grid[ri][ci] = '.'
+		for ci, _ in r {
+			coord := Coordinate{ri, ci}
+			if coord !in pipe {
+				grid.set(coord, '.')
 			}
 		}
 	}
@@ -144,40 +185,38 @@ fn part02(lines []string) !int {
 
 	// now extend the characters
 	for row_i, row in grid {
-		if row_i % 2 == 0{
+		if row_i % 2 == 0 {
 			continue
 		}
 		for col_i, c in row {
-			if col_i % 2 == 0{
+			if col_i % 2 == 0 {
 				continue
 			}
+			coord := Coordinate{row_i, col_i}
 			match c {
 				'|' {
-					// println(row)
-					grid[row_i - 1][col_i] = '|'
-					grid[row_i + 1][col_i] = '|'
+					grid.set(coord.up(), '|')
+					grid.set(coord.down(), '|')
 				}
 				'-' {
-					grid[row_i][col_i - 1] = '-'
-					grid[row_i][col_i + 1] = '-'
+					grid.set(coord.left(), '-')
+					grid.set(coord.right(), '-')
 				}
 				'L' {
-					grid[row_i - 1][col_i] = '|'
-					grid[row_i][col_i + 1] = '-'
+					grid.set(coord.up(), '|')
+					grid.set(coord.right(), '-')
 				}
 				'J' {
-					grid[row_i - 1][col_i] = '|'
-					grid[row_i][col_i - 1] = '-'
+					grid.set(coord.up(), '|')
+					grid.set(coord.left(), '-')
 				}
 				'7' {
-					grid[row_i + 1][col_i] = '|'
-					grid[row_i][col_i - 1] = '-'
-					
+					grid.set(coord.down(), '|')
+					grid.set(coord.left(), '-')
 				}
 				'F' {
-					grid[row_i + 1][col_i] = '|'
-					grid[row_i][col_i + 1] = '-'
-					
+					grid.set(coord.down(), '|')
+					grid.set(coord.right(), '-')
 				}
 				else {}
 			}
@@ -187,44 +226,46 @@ fn part02(lines []string) !int {
 		// println('='.repeat(grid[0].len+4))
 	}
 
-
 	// println('='.repeat(grid[0].len+4))
 	// println(grid.map('||'+it.join('')+'||').join('\n'))
 	// println('='.repeat(grid[0].len+4))
 
 	// Floodfill algorithm, starting on the outside.
-	mut done := [][]int{}
-	mut queue := [][]int{}
+	mut done := []Coordinate{}
+	mut queue := []Coordinate{}
+	dirs := [Coordinate{1, 0}, Coordinate{-1, 0}, Coordinate{0, 1},
+		Coordinate{0, -1}]
+
 	// Add all positions on the outside in the queue
-	for i in 0..grid.len {
-		queue << [i, 0]
-		queue << [i, grid[0].len-1]
+	for i in 0 .. grid.len {
+		queue << Coordinate{i, 0}
+		queue << Coordinate{i, grid[0].len - 1}
 	}
-	for i in 0..grid[0].len {
-		queue << [0, i]
-		queue << [grid.len-1, i]
+	for i in 0 .. grid[0].len {
+		queue << Coordinate{0, i}
+		queue << Coordinate{grid.len - 1, i}
 	}
 
 	for (queue.len > 0) {
 		pos := queue.pop()
-		for dir in [[1, 0], [-1, 0], [0, 1], [0, -1]] {
-			new_pos := [pos[0] + dir[0], pos[1] + dir[1]]
-			if new_pos[0] >= 0 && new_pos[1] >= 0 && new_pos[0] < grid.len
-				&& new_pos[1] < grid[0].len && grid[new_pos[0]][new_pos[1]] in [' ', '.']
-				&& (new_pos !in done) {
+		for dir in dirs {
+			new_pos := Coordinate{pos.y + dir.y, pos.x + dir.x}
+			if new_pos.y >= 0 && new_pos.x >= 0 && new_pos.y < grid.len && new_pos.x < grid[0].len
+				&& grid.at(new_pos) in [' ', '.'] && new_pos !in done {
 				queue << new_pos
-				grid[new_pos[0]][new_pos[1]] = 'O'
+				grid.set(new_pos, 'O')
 			}
 		}
 		done << pos
 	}
-	println('--------------------')
-	println(grid.map(it.join('')).join('\n'))
-	println('--------------------')
+	// println('--------------------')
+	// println(grid.map(it.join('')).join('\n'))
+	// println('--------------------')
 	// println(done)
 	// println(queue)
 
-	return arrays.map_of_counts(arrays.flatten(grid))['.']
+	// Count dots left in grids
+	return arrays.sum(grid.map(it.filter(it == '.').len))
 }
 
 fn main() {
@@ -247,6 +288,6 @@ fn main() {
 		println('Part 01 took: ${sw.elapsed().microseconds()}us')
 		sw.restart()
 		println(part02(lines)!)
-		println('Part 02 took: ${sw.elapsed().microseconds()}us')
+		println('Part 02 took: ${sw.elapsed().milliseconds()}ms')
 	}
 }
