@@ -16,9 +16,9 @@ fn (a Coordinate) distance_to(b Coordinate) i64 {
 
 fn (a Coordinate) distance_to_expanded(b Coordinate, expansions []Coordinate, expand_size int) i64 {
 	y_addition := expansions.filter(it.x == 0 && ((it.y > a.y && it.y < b.y)
-		|| (it.y < a.y && it.y > b.y))).len * (expand_size-1)
+		|| (it.y < a.y && it.y > b.y))).len * (expand_size - 1)
 	x_addition := expansions.filter(it.y == 0 && ((it.x > a.x && it.x < b.x)
-		|| (it.x < a.x && it.x > b.x))).len * (expand_size-1)
+		|| (it.x < a.x && it.x > b.x))).len * (expand_size - 1)
 	return math.abs(a.y - b.y) + y_addition + math.abs(a.x - b.x) + x_addition
 }
 
@@ -113,9 +113,9 @@ fn part02(lines []string, args Part2Args) !i64 {
 	}
 	// println('Galaxies: ${galaxies}')
 
-	mut distances := [][]i64{len: galaxies.len, init: []i64{len: galaxies.len, init: i64(-1)}}
+	mut distances := [][]i64{len: galaxies.len, init: []i64{len: galaxies.len, init: i64(0)}}
 	for i in 0 .. galaxies.len {
-		for j in i .. galaxies.len {
+		for j in (i + 1) .. galaxies.len {
 			dist := galaxies[i].distance_to_expanded(galaxies[j], expansions, args.expand_size)
 			distances[i][j] = dist
 			distances[j][i] = dist
