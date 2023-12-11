@@ -10,34 +10,6 @@ struct Coordinate {
 	x i64
 }
 
-fn (coord Coordinate) up() Coordinate {
-	return Coordinate{
-		y: coord.y - 1
-		x: coord.x
-	}
-}
-
-fn (coord Coordinate) down() Coordinate {
-	return Coordinate{
-		y: coord.y + 1
-		x: coord.x
-	}
-}
-
-fn (coord Coordinate) left() Coordinate {
-	return Coordinate{
-		y: coord.y
-		x: coord.x - 1
-	}
-}
-
-fn (coord Coordinate) right() Coordinate {
-	return Coordinate{
-		y: coord.y
-		x: coord.x + 1
-	}
-}
-
 fn (a Coordinate) distance_to(b Coordinate) i64 {
 	return math.abs(a.y - b.y) + math.abs(a.x - b.x)
 }
@@ -48,18 +20,6 @@ fn (a Coordinate) distance_to_expanded(b Coordinate, expansions []Coordinate, ex
 	x_addition := expansions.filter(it.y == 0 && ((it.x > a.x && it.x < b.x)
 		|| (it.x < a.x && it.x > b.x))).len * (expand_size-1)
 	return math.abs(a.y - b.y) + y_addition + math.abs(a.x - b.x) + x_addition
-}
-
-fn at(s_arr []string, coord Coordinate) rune {
-	return s_arr[coord.y][coord.x]
-}
-
-fn (arr [][]string) at(coord Coordinate) string {
-	return arr[coord.y][coord.x]
-}
-
-fn (mut arr [][]string) set(coord Coordinate, value string) {
-	arr[coord.y][coord.x] = value
 }
 
 fn (grid [][]string) str() string {
@@ -114,7 +74,6 @@ fn part01(lines []string) !i64 {
 	// println(' ' + distances.map(it.map('${it:3}').join('  |  ')).join('\n '))
 
 	// Find shortest path
-	// shortest_path := arrays.min(distances.map( arrays.min(it.filter(it != 0))! ))!
 	shortest_path_sum := arrays.sum(distances.map(arrays.sum(it)!))! / 2
 	return shortest_path_sum
 }
@@ -167,7 +126,6 @@ fn part02(lines []string, args Part2Args) !i64 {
 	// println(' ' + distances.map(it.map('${it:3}').join('  |  ')).join('\n '))
 
 	// Find shortest path
-	// shortest_path := arrays.min(distances.map( arrays.min(it.filter(it != 0))! ))!
 	shortest_path_sum := arrays.sum(distances.map(arrays.sum(it)!))! / 2
 	return shortest_path_sum
 }
