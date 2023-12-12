@@ -12,10 +12,10 @@ fn part01(lines []string) !i64 {
 		mut springs := temp[0]
 		temp_sizes := temp[1].split(',').map(it.int())
 		mut sizes := temp_sizes.clone()
-		// for i in 0 .. 2 {
-		// 	springs += '?' + temp[0]
-		// 	sizes << temp_sizes
-		// }
+		for i in 0 .. 2 {
+			springs += '?' + temp[0]
+			sizes << temp_sizes
+		}
 
 		println('${springs} - ${sizes}')
 
@@ -27,18 +27,59 @@ fn part01(lines []string) !i64 {
 		// Yeet pointers that we can exclude upfront.
 		// Some conditions are dependent on the combinations. They will be looked at in THE loop itself.
 		println(t)
+
+		// Remove offsets that place a spring on a .
+		// Remove offsets whose surroundings are a #
 		for pi, mut t_opts in t {
 			mut delete_count := 0
 			for so_i, spring_offset in t_opts.clone() {
 				size := sizes[pi]
-				if springs[spring_offset..spring_offset + size].contains('.') {
+				offset_end := spring_offset + size
+				if springs[spring_offset..spring_offset + size].contains('.')
+					|| (spring_offset > 0 && springs[spring_offset - 1] == `#`)
+					|| (offset_end < springs.len && springs[offset_end] == `#`) {
 					t_opts.delete(so_i - delete_count)
 					delete_count += 1
 				}
 			}
 		}
 
+		// Remove offsets where spring is before previous spring or spring after next spring
+		for {
+			mut did_delete := false
+
+			for pi, mut t_opts in t[..t.len - 1] {
+				if t[pi][0] + 1 >= t[pi + 1][0] {
+					t[pi + 1].delete(0)
+					did_delete = true
+					break
+				}
+			}
+			if !did_delete {
+				break
+			}
+		}
+		for {
+			mut did_delete := false
+
+			for pi, mut t_opts in t[..t.len-1] {
+				if t[pi].last() >= t[pi+1].last() - 1 {
+					t[pi].delete(t[pi].len - 1)
+					did_delete = true
+					break
+				}
+			}
+			if !did_delete {
+				break
+			}
+		}
+
 		println(t)
+		comb_count := arrays.reduce(t.map(it.len), fn (acc int, elem int) int {
+			return acc * elem
+		})!
+		println('Start with ${t.map(it.len)} options, total ${arrays.sum(t.map(it.len))}')
+		println('This makes ${comb_count} combinations')
 		mut options := 0
 		mut pointers := []int{len: sizes.len, init: 0}
 		for {
@@ -87,10 +128,10 @@ fn part01(lines []string) !i64 {
 						result[t[pi][p] + i] = 'x'
 					}
 				}
-				println(pointers)
-				println(springs)
-				println(result.join(''))
-				println('')
+				// println(pointers)
+				// println(springs)
+				// println(result.join(''))
+				// println('')
 				options += 1
 			}
 
