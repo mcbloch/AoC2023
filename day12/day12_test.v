@@ -17,7 +17,7 @@ fn test_part02_example() {
 	assert part02(lines)! == 525152
 }
 
-// fn test_part02() {
-// 	lines := os.read_lines('input/11.txt')!
-// 	assert part02(lines, Part2Args{})! == 569052586852
-// }
+fn test_part02() {
+	lines := os.read_lines('input/12.txt')!
+	assert part02(lines)! > 2935121703
+}
