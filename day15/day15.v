@@ -16,7 +16,7 @@ fn (l Lens) str() string {
 }
 
 fn part02(data string) !int {
-	mut hashmap := map[int][]Lens{}
+	mut hashmap := [][]Lens{len: 256, init: []Lens{}}
 	for stepp in data.split(',') {
 		mut step := stepp.replace('\n', '')
 
@@ -28,10 +28,6 @@ fn part02(data string) !int {
 		})
 
 		if step.contains('=') {
-			if key !in hashmap {
-				hashmap[key] = []Lens{}
-			}
-
 			length := split[1].int()
 			if hashmap[key].any(it.label == prefix) {
 				hashmap[key] = hashmap[key].map(fn [prefix, length] (it Lens) Lens {
