@@ -1,6 +1,6 @@
 module main
 
-import os
+import os { read_file }
 import time { new_stopwatch }
 import arrays { fold, map_indexed, sum }
 
@@ -30,22 +30,23 @@ fn part02(data string) !int {
 	mut hashmap := [][]Lens{len: 256, init: []Lens{}}
 	for step in data.split(',') {
 		mut split := step.replace('\n', '').split_any('=-')
+		label := split[0]
 
-		key := hash(split[0].bytes())
+		key := hash(label.bytes())
 
 		if step.contains('=') {
-			new_lens := Lens{split[0], split[1].int()}
-			if hashmap[key].any(it.label == new_lens.label) {
-				hashmap[key] = hashmap[key].map(if it.label == new_lens.label {
-					new_lens
+			lens := Lens{label, split[1].int()}
+			if hashmap[key].any(it.label == label) {
+				hashmap[key] = hashmap[key].map(if it.label == label {
+					lens
 				} else {
 					it
 				})
 			} else {
-				hashmap[key] << new_lens
+				hashmap[key] << lens
 			}
 		} else if step.contains('-') {
-			hashmap[key] = hashmap[key].filter(it.label != split[0])
+			hashmap[key] = hashmap[key].filter(it.label != label)
 		}
 	}
 
@@ -62,7 +63,7 @@ fn main() {
 		else { 'input/15.txt' }
 	}
 	println('Reading input: ${inputfile}')
-	data := os.read_file(inputfile)!
+	data := read_file(inputfile)!
 
 	if os.args.len >= 3 {
 		match os.args[2] {
