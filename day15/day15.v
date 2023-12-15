@@ -2,9 +2,7 @@ module main
 
 import os
 import time { new_stopwatch }
-// import math
-import arrays
-// import regex
+import arrays { fold, map_indexed, sum }
 
 struct Lens {
 	label string
@@ -16,14 +14,24 @@ fn (l Lens) str() string {
 	return 'Lens(${l.label}, ${l.focal_length})'
 }
 
+fn hash_fold_op(acc int, elem u8) int {
+	return ((acc + elem) * 17) % 256
+}
+
+fn hash(l []u8) int {
+	return fold(l, 0, hash_fold_op)
+}
+
+fn part01(data string) !int {
+	return sum(data.split(',').map(hash(it.bytes().filter(it != `\n`)))) or { 0 }
+}
+
 fn part02(data string) !int {
 	mut hashmap := [][]Lens{len: 256, init: []Lens{}}
 	for step in data.split(',') {
 		mut split := step.replace('\n', '').split_any('=-')
 
-		key := arrays.fold(split[0].bytes(), 0, fn (acc int, elem u8) int {
-			return ((acc + elem) * 17) % 256
-		})
+		key := hash(split[0].bytes())
 
 		if step.contains('=') {
 			new_lens := Lens{split[0], split[1].int()}
@@ -41,30 +49,11 @@ fn part02(data string) !int {
 		}
 	}
 
-	return arrays.sum(arrays.map_indexed(hashmap, fn (k int, v []Lens) int {
-		return arrays.sum(arrays.map_indexed(v, fn [k] (idx int, l Lens) int {
+	return sum(map_indexed(hashmap, fn (k int, v []Lens) int {
+		return sum(map_indexed(v, fn [k] (idx int, l Lens) int {
 			return (k + 1) * (idx + 1) * l.focal_length
 		})) or { 0 }
 	})) or { 0 }
-}
-
-fn part01(data string) !int {
-	mut sum := 0
-
-	for step in data.split(',') {
-		mut current_value := 0
-		for c in step {
-			if c == `\n` {
-				continue
-			}
-			current_value += c
-			current_value *= 17
-			current_value %= 256
-		}
-		sum += current_value
-	}
-
-	return sum
 }
 
 fn main() {
