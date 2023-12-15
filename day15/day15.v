@@ -7,7 +7,8 @@ import arrays
 // import regex
 
 struct Lens {
-	label        string
+	label string
+mut:
 	focal_length int
 }
 
@@ -17,45 +18,34 @@ fn (l Lens) str() string {
 
 fn part02(data string) !int {
 	mut hashmap := [][]Lens{len: 256, init: []Lens{}}
-	for stepp in data.split(',') {
-		mut step := stepp.replace('\n', '')
+	for step in data.split(',') {
+		mut split := step.replace('\n', '').split_any('=-')
 
-		mut split := step.split_any('=-')
-		prefix := split[0]
-
-		key := arrays.fold(prefix.bytes(), 0, fn(acc int, elem u8) int {
+		key := arrays.fold(split[0].bytes(), 0, fn (acc int, elem u8) int {
 			return ((acc + elem) * 17) % 256
 		})
 
 		if step.contains('=') {
-			length := split[1].int()
-			if hashmap[key].any(it.label == prefix) {
-				hashmap[key] = hashmap[key].map(fn [prefix, length] (it Lens) Lens {
-					if it.label == prefix {
-						return Lens{prefix, length}
-					} else {
-						return it
-					}
+			new_lens := Lens{split[0], split[1].int()}
+			if hashmap[key].any(it.label == new_lens.label) {
+				hashmap[key] = hashmap[key].map(if it.label == new_lens.label {
+					new_lens
+				} else {
+					it
 				})
 			} else {
-				hashmap[key] << Lens{prefix, length}
+				hashmap[key] << new_lens
 			}
-		}
-
-		if step.contains('-') {
-			hashmap[key] = hashmap[key].filter(it.label != prefix)
+		} else if step.contains('-') {
+			hashmap[key] = hashmap[key].filter(it.label != split[0])
 		}
 	}
 
-	mut sum := 0
-	for k, v in hashmap {
-		for li, l in v {
-			l_value := ((k+1) * (li+1) * l.focal_length)
-			sum += l_value
-		}
-	}
-
-	return sum
+	return arrays.sum(arrays.map_indexed(hashmap, fn (k int, v []Lens) int {
+		return arrays.sum(arrays.map_indexed(v, fn [k] (idx int, l Lens) int {
+			return (k + 1) * (idx + 1) * l.focal_length
+		})) or { 0 }
+	})) or { 0 }
 }
 
 fn part01(data string) !int {
