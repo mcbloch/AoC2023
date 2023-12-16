@@ -42,17 +42,13 @@ fn (b Beam) str() string {
 	return 'Beam[${b.position}, ${b.direction}]'
 }
 
-fn (b Beam) + (b2 Beam) Beam {
-	return Beam{b.position + b2.position, b2.direction}
-}
-
-fn (d Dir) offset() Beam {
-	return Beam{match d {
-		.up { Pos{-1, 0} }
-		.down { Pos{1, 0} }
-		.right { Pos{0, 1} }
-		.left { Pos{0, -1} }
-	}, d}
+fn (b Beam) move(d Dir) Beam {
+	return match d {
+		.up { Beam{b.position + Pos{-1, 0}, d} }
+		.down { Beam{b.position + Pos{1, 0}, d} }
+		.right { Beam{b.position + Pos{0, 1}, d} }
+		.left { Beam{b.position + Pos{0, -1}, d} }
+	}
 }
 
 fn (grid [][]u8) get(p Pos) u8 {
@@ -73,49 +69,50 @@ fn str(grid [][]u8, beams []Beam) string {
 
 fn (beam Beam) step(grid [][]u8) []Beam {
 	// println('${beam}')
-	tile := grid[beam.position.row][beam.position.col]
-	offsets := match tile {
+	new_dirs := match grid.get(beam.position) {
 		`|` {
 			match beam.direction {
-				.left { [Dir.down.offset(), Dir.up.offset()] }
-				.right { [Dir.down.offset(), Dir.up.offset()] }
-				else { [beam.direction.offset()] }
+				.left { [Dir.down, Dir.up] }
+				.right { [Dir.down, Dir.up] }
+				else { [beam.direction] }
 			}
 		}
 		`-` {
 			match beam.direction {
-				.up { [Dir.left.offset(), Dir.right.offset()] }
-				.down { [Dir.left.offset(), Dir.right.offset()] }
-				else { [beam.direction.offset()] }
+				.up { [Dir.left, Dir.right] }
+				.down { [Dir.left, Dir.right] }
+				else { [beam.direction] }
 			}
 		}
 		`/` {
 			match beam.direction {
-				.up { [Dir.right.offset()] }
-				.down { [Dir.left.offset()] }
-				.right { [Dir.up.offset()] }
-				.left { [Dir.down.offset()] }
+				.up { [Dir.right] }
+				.down { [Dir.left] }
+				.right { [Dir.up] }
+				.left { [Dir.down] }
 			}
 		}
 		`\\` {
 			match beam.direction {
-				.up { [Dir.left.offset()] }
-				.down { [Dir.right.offset()] }
-				.right { [Dir.down.offset()] }
-				.left { [Dir.up.offset()] }
+				.up { [Dir.left] }
+				.down { [Dir.right] }
+				.right { [Dir.down] }
+				.left { [Dir.up] }
 			}
 		}
 		else {
-			[beam.direction.offset()]
+			[beam.direction]
 		}
 	}
 	// println(offsets)
-	return offsets.map(beam + it).filter(it.position.row >= 0 && it.position.col >= 0
+	return new_dirs.map(beam.move(it)).filter(it.position.row >= 0 && it.position.col >= 0
 		&& it.position.row < grid.len && it.position.col < grid[0].len)
 }
 
 fn part01(data []string) !int {
+	println(data.len)
 	grid := data.map(it.bytes())
+	mut grid_passed := [][]int{len: data.len, init: []int{len: data[0].len, init: 0}}
 
 	mut queue := []Beam{}
 	mut done := []Beam{}
@@ -131,13 +128,14 @@ fn part01(data []string) !int {
 			}
 		}
 
+		grid_passed[beam.position.row][beam.position.col] = 1
 		done << beam
 		// println('queue: ${queue}')
 		// println('done:  ${done}')
 		// println(str(grid, done))
 	}
 
-	return arrays.distinct(done.map((it.position.row * grid.len) + it.position.col)).len
+	return arrays.sum(grid_passed.map(arrays.sum(it) or { 0 })) or { 0 }
 }
 
 fn part02(data []string) !int {
@@ -187,17 +185,19 @@ fn part02(data []string) !int {
 fn main() {
 	inputfile := match true {
 		os.args.len >= 2 { os.args[1] }
-		else { 'input/15.txt' }
+		else { 'input/16.txt' }
 	}
 	println('Reading input: ${inputfile}')
 	data := read_lines(inputfile)!
 
 	if os.args.len >= 3 {
+		mut sw := new_stopwatch()
 		match os.args[2] {
 			'1' { println(part01(data)!) }
 			'2' { println(part02(data)!) }
 			else { println('Unknown part specified') }
 		}
+		println('Took: ${sw.elapsed().milliseconds()}ms')
 	} else {
 		mut sw := new_stopwatch()
 		println(part01(data)!)
