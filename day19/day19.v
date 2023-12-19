@@ -2,8 +2,9 @@ module main
 
 import os { read_file }
 import time { new_stopwatch }
-import arrays { sum }
+// import arrays { sum }
 // import math { min }
+import math
 
 enum Action {
 	accept
@@ -138,8 +139,8 @@ fn part01(data string) !int {
 }
 
 struct RulePointer {
-	w_name  string
-	r_idx   int
+	w_name string
+	r_idx  int
 mut:
 	reverse bool
 }
@@ -148,35 +149,34 @@ fn (rp RulePointer) str() string {
 	return 'RP(${rp.w_name} : ${rp.r_idx} ${rp.reverse})'
 }
 
-fn compare_constraint(c Rule, a int, reverse bool) bool {
-	result := match c.comparator {
-		`<` { a < c.compare_value }
-		`>` { a > c.compare_value }
-		`E` { true }
-		else { panic('Unknown comparator') }
-	}
-	if reverse {
-		return !result
-	} else {
-		return result
-	}
-}
-
-fn calculate_possibilities(workflow_name string, rule_i int, workflows map[string]Workflow, mut constraints []RulePointer) i64 {
+fn calculate_possibilities(workflow_name string, workflows map[string]Workflow, mut constraints []RulePointer) i64 {
 	if workflow_name == 'in' {
 		mut total := i64(1)
 
 		for part in [`x`, `m`, `a`, `s`] {
-			mut nums := []int{len: 4000, init: index + 1}
+			mut num_min := 1
+			mut num_max := 4000
 			for rp in constraints {
 				rule := workflows[rp.w_name].rules[rp.r_idx]
 				if rule.part != part {
 					continue
 				}
 
-				nums = nums.filter(compare_constraint(rule, it, rp.reverse))
+				if !rp.reverse {
+					match rule.comparator {
+						`<` { num_max = math.min(num_max, rule.compare_value - 1) }
+						`>` { num_min = math.max(num_min, rule.compare_value + 1) }
+						else {}
+					}
+				} else {
+					match rule.comparator {
+						`>` { num_max = math.min(num_max, rule.compare_value) }
+						`<` { num_min = math.max(num_min, rule.compare_value) }
+						else {}
+					}
+				}
 			}
-			total *= nums.len
+			total *= (num_max + 1 - num_min)
 		}
 
 		return total
@@ -188,12 +188,9 @@ fn calculate_possibilities(workflow_name string, rule_i int, workflows map[strin
 				constraints << RulePointer{name, rule_i_new, true}
 
 				if rule_new.destination == workflow_name {
-
-					constraints[constraints.len-1].reverse = false
-					sub_count += calculate_possibilities(name, rule_i_new, workflows,
-						mut constraints)
-					constraints[constraints.len-1].reverse = true
-
+					constraints[constraints.len - 1].reverse = false
+					sub_count += calculate_possibilities(name, workflows, mut constraints)
+					constraints[constraints.len - 1].reverse = true
 				}
 			}
 
@@ -203,7 +200,6 @@ fn calculate_possibilities(workflow_name string, rule_i int, workflows map[strin
 		}
 		return sub_count
 	}
-	return 0
 }
 
 fn part02(data string) !i64 {
@@ -250,17 +246,17 @@ fn part02(data string) !i64 {
 
 	mut total := i64(0)
 	mut constraints := []RulePointer{}
+
 	for name, workflow in workflows {
 		for rule_i, rule in workflow.rules {
-			constraints <<  RulePointer{name, rule_i, true}
+			constraints << RulePointer{name, rule_i, true}
 			if rule.action == Action.accept {
-				
 				constraints.last().reverse = false
-				total += calculate_possibilities(name, rule_i, workflows, mut constraints)
+				total += calculate_possibilities(name, workflows, mut constraints)
 				constraints.last().reverse = true
 			}
 		}
-		for _ in workflow.rules { 
+		for _ in workflow.rules {
 			constraints.pop()
 		}
 	}
