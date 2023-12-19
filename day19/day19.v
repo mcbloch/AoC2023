@@ -74,11 +74,6 @@ fn part01(data string) !int {
 			rules: rules
 		}
 	}
-	// for _, w in workflows {
-	// 	println(w)
-	// }
-	// println('=========')
-	// println(workflows)
 
 	part_ratings_raw := parts[1].split_into_lines().map(it.split_any('{,}'))
 	mut accepted_parts := []map[rune]int{}
@@ -89,12 +84,10 @@ fn part01(data string) !int {
 			`a`: part_rating_raw[3].substr(2, part_rating_raw[3].len).int()
 			`s`: part_rating_raw[4].substr(2, part_rating_raw[4].len).int()
 		}
-		// println(part_rating)
 		mut workflow_name := 'in'
 
 		outer: for {
 			workflow := workflows[workflow_name]
-			// println(workflow)
 			for rule in workflow.rules {
 				op := match rule.comparator {
 					`<` {
@@ -120,11 +113,9 @@ fn part01(data string) !int {
 					match rule.action {
 						.accept {
 							accepted_parts << part_rating
-							// println('ACCEPT')
 							break outer
 						}
 						.reject {
-							// println('REJECT')
 							break outer
 						}
 						.send_to {
@@ -136,15 +127,12 @@ fn part01(data string) !int {
 			}
 		}
 	}
-	// println('')
-	// println(accepted_parts)
 	mut sum := 0
 	for acc in accepted_parts {
 		for _, v in acc {
 			sum += v
 		}
 	}
-	// return arrays.sum(accepted_parts.map(arrays.sum(it.values())))
 
 	return sum
 }
@@ -152,6 +140,7 @@ fn part01(data string) !int {
 struct RulePointer {
 	w_name  string
 	r_idx   int
+mut:
 	reverse bool
 }
 
@@ -173,14 +162,12 @@ fn compare_constraint(c Rule, a int, reverse bool) bool {
 	}
 }
 
-fn calculate_possibilities(workflow_name string, rule_i int, workflows map[string]Workflow, constraints []RulePointer) i64 {
-	// println(workflow_name)
+fn calculate_possibilities(workflow_name string, rule_i int, workflows map[string]Workflow, mut constraints []RulePointer) i64 {
 	if workflow_name == 'in' {
-		// println(constraints)
 		mut total := i64(1)
 
 		for part in [`x`, `m`, `a`, `s`] {
-			mut nums := []int{len: 4000, init: index + 1} 
+			mut nums := []int{len: 4000, init: index + 1}
 			for rp in constraints {
 				rule := workflows[rp.w_name].rules[rp.r_idx]
 				if rule.part != part {
@@ -190,19 +177,7 @@ fn calculate_possibilities(workflow_name string, rule_i int, workflows map[strin
 				nums = nums.filter(compare_constraint(rule, it, rp.reverse))
 			}
 			total *= nums.len
-
-			// mut local_amount := 0
-			// for i in 1 .. 4001 {
-			// 	if constraints.filter(workflows[it.w_name].rules[it.r_idx].part == part).all(compare_constraint(workflows[it.w_name].rules[it.r_idx],
-			// 		i, it.reverse))
-			// 	{
-			// 		local_amount += 1
-			// 	}
-			// }
-			// println('${part} -> ${local_amount}')
-			// total *= local_amount
 		}
-		// println('${total}')
 
 		return total
 	} else {
@@ -210,14 +185,20 @@ fn calculate_possibilities(workflow_name string, rule_i int, workflows map[strin
 		mut sub_count := i64(0)
 		for name, workflow in workflows {
 			for rule_i_new, rule_new in workflow.rules {
+				constraints << RulePointer{name, rule_i_new, true}
+
 				if rule_new.destination == workflow_name {
-					mut new_cs := constraints.clone()
-					for i in 0 .. rule_i_new {
-						new_cs << RulePointer{name, i, true}
-					}
-					new_cs << RulePointer{name, rule_i_new, false}
-					sub_count += calculate_possibilities(name, rule_i_new, workflows, new_cs)
+
+					constraints[constraints.len-1].reverse = false
+					sub_count += calculate_possibilities(name, rule_i_new, workflows,
+						mut constraints)
+					constraints[constraints.len-1].reverse = true
+
 				}
+			}
+
+			for _ in workflow.rules {
+				constraints.pop()
 			}
 		}
 		return sub_count
@@ -228,7 +209,6 @@ fn calculate_possibilities(workflow_name string, rule_i int, workflows map[strin
 fn part02(data string) !i64 {
 	parts := data.split('\n\n')
 	workflows_raw := parts[0].split_into_lines().map(it.split_any('{,}'))
-	// println(workflows_raw)
 	mut workflows := map[string]Workflow{}
 	for w in workflows_raw {
 		rules_raw := w[1..]
@@ -268,31 +248,22 @@ fn part02(data string) !i64 {
 		}
 	}
 
-	// for _, w in workflows {
-	// 	println(w)
-	// }
-	// println('=========')
-
 	mut total := i64(0)
 	mut constraints := []RulePointer{}
 	for name, workflow in workflows {
 		for rule_i, rule in workflow.rules {
+			constraints <<  RulePointer{name, rule_i, true}
 			if rule.action == Action.accept {
-				mut cs := constraints.clone()
-				for i in 0 .. rule_i {
-					cs << RulePointer{name, i, true}
-				}
-				cs << RulePointer{name, rule_i, false}
-				total += calculate_possibilities(name, rule_i, workflows, cs)
+				
+				constraints.last().reverse = false
+				total += calculate_possibilities(name, rule_i, workflows, mut constraints)
+				constraints.last().reverse = true
 			}
 		}
-		// mut new_constraints = constraints.clone()
+		for _ in workflow.rules { 
+			constraints.pop()
+		}
 	}
-
-	// recursive
-	// for a workflow with an end, find the ranges to end
-	// do recursive call on all workflows going to this workflow
-	//    and request the possiblities to get here given some contraints.
 
 	return total
 }
